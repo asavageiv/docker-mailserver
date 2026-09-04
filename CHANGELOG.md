@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file. The format 
 
 > **Note**: Changes and additions listed here are contained in the `:edge` image tag. These changes may not be as stable as released changes.
 
+### CI
+
+- Moved `setup_cli.bats` to the serial test suite to prevent `setup.sh` from racing with teardown of another DMS test container ([#4701](https://github.com/docker-mailserver/docker-mailserver/issues/4701))
+- Excluded `saslauthd` from the process kill/restart assertion because its forked parent process is not reliably reaped by the test
+
 ## [v16.0.1](https://github.com/docker-mailserver/docker-mailserver/releases/tag/v16.0.1)
 
 ### Added
