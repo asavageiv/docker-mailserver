@@ -33,7 +33,7 @@ on:
         default: false
   schedule:
     # Not at minute 0: GitHub delays or drops scheduled runs at the start of the hour, when load is highest.
-    - cron: 17 * * * *
+    - cron: 30 * * * *
 
 permissions:
   contents: read
@@ -46,7 +46,7 @@ env:
   SUPPORTED_MAJORS: '16'
   # Scheduled runs skip a major whose published image is younger than this. Limits how often the tags
   # change for people tracking them, and stops a rebuild loop if an update never clears.
-  MIN_REBUILD_INTERVAL_HOURS: 3
+  MIN_REBUILD_INTERVAL_HOURS: 0
   # Packages that stay "upgradable" even after a rebuild, so they must not trigger one. v16 builds
   # `dovecot-fts-xapian` from source as `1.9.1-1~bpo12+1`, which apt sorts below Debian's `1.9.1-1.1`.
   # Space separated. Not needed for v17+, where Xapian was removed.
