@@ -81,15 +81,6 @@ function _install_utils() {
     "https://github.com/smallstep/cli/releases/download/v${STEP_CLI_VERSION}/step-cli_${ARCH_B}.deb"
   dpkg -i /tmp/step-cli.deb
   rm /tmp/step-cli.deb
-
-  _log 'trace' 'Installing swaks'
-  # `perl-doc` is required for `swaks --help` to work:
-  apt-get "${QUIET}" install --no-install-recommends perl-doc
-  local SWAKS_VERSION='20240103.0'
-  local SWAKS_RELEASE="swaks-${SWAKS_VERSION}"
-  curl -sSfL \
-    "https://github.com/jetmore/swaks/releases/download/v${SWAKS_VERSION}/${SWAKS_RELEASE}.tar.gz" \
-    | tar -xz --directory /usr/local/bin --no-same-owner --strip-components=1 "${SWAKS_RELEASE}/swaks"
 }
 
 function _install_packages() {
@@ -117,7 +108,8 @@ function _install_packages() {
     libdate-manip-perl libldap-common libmail-spf-perl libnet-dns-perl
     locales logwatch netcat-openbsd
     nftables # primarily for Fail2Ban
-    rsyslog supervisor
+    perl-doc # required for `swaks --help` to work
+    rsyslog supervisor swaks
     uuid # used for file-locking
     whois
   )
@@ -204,26 +196,36 @@ EOF
 }
 
 function _install_rspamd() {
-  # NOTE: DMS only supports the Rspamd package by using the
-  #       third-party repo maintained by Rspamd (AMD64 + ARM64)
+  # NOTE: DMS only supports the Rspamd package built by the Rspamd project (AMD64 + ARM64),
+  #       as the version in Debian is a major version behind.
   #
-  # REF: https://rspamd.com/apt-stable/dists/trixie/main/
+  # The release is pinned: the package index of the Rspamd apt repo only lists the newest
+  # release, so the `.deb` of the pinned release is downloaded from the repo's pool instead
+  # and verified. The apt repo is not added, so an upgrade of the system packages never
+  # replaces Rspamd. To update Rspamd, change the version and both checksums.
+  #
+  # REF: https://rspamd.com/apt-stable/pool/main/r/rspamd/
   #      https://rspamd.com/downloads.html#debian-and-ubuntu-linux
+  local RSPAMD_VERSION='4.1.5-1~9a291a4~trixie'
 
-  _log 'trace' 'Adding third-party package repository (Rspamd)'
-  curl -fsSL https://rspamd.com/apt-stable/gpg.key \
-    | gpg --dearmor > /usr/share/keyrings/upstream-rspamd.gpg
-  cat >/etc/apt/sources.list.d/upstream-rspamd.sources <<EOF
-Types: deb
-URIs: https://rspamd.com/apt-stable/
-Suites: ${VERSION_CODENAME}
-Components: main
-Signed-By: /usr/share/keyrings/upstream-rspamd.gpg
-EOF
+  local RSPAMD_ARCH RSPAMD_SHA256
+  RSPAMD_ARCH=$(dpkg --print-architecture)
+  case "${RSPAMD_ARCH}" in
+    ( 'amd64' ) RSPAMD_SHA256='0b2d7a53db33a76e5cbc53ad1ba99574ddeb6d1164bc628af9f4a5e2dd98b34e' ;;
+    ( 'arm64' ) RSPAMD_SHA256='ee0be0c9c97de320f23f56f865e3ed33ba6f30ddcc0ff20de5e16c366abb4de6' ;;
+    ( * )
+      _log 'error' "Unsupported arch: '${RSPAMD_ARCH}'"
+      return 1
+      ;;
+  esac
+
+  local RSPAMD_DEB="rspamd_${RSPAMD_VERSION}_${RSPAMD_ARCH}.deb"
 
   _log 'debug' 'Installing Rspamd'
-  apt-get "${QUIET}" update
-  apt-get "${QUIET}" install rspamd redis-server
+  curl -fsSLo "/tmp/${RSPAMD_DEB}" "https://rspamd.com/apt-stable/pool/main/r/rspamd/${RSPAMD_DEB}"
+  echo "${RSPAMD_SHA256}  /tmp/${RSPAMD_DEB}" | sha256sum --check --quiet
+  apt-get "${QUIET}" install "/tmp/${RSPAMD_DEB}" redis-server
+  rm "/tmp/${RSPAMD_DEB}"
 }
 
 function _install_fail2ban() {
