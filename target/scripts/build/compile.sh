@@ -18,7 +18,7 @@ function _install_build_deps() {
 }
 
 function _build_package() {
-  local XAPIAN_DEBIAN_VERSION='1.9.1-1~bpo12+1'
+  local XAPIAN_DEBIAN_VERSION='1.9.1-1.1'
   local XAPIAN_VERSION="${XAPIAN_DEBIAN_VERSION%-*}"
   curl -fsSL "https://deb.debian.org/debian/pool/main/d/dovecot-fts-xapian/dovecot-fts-xapian_${XAPIAN_VERSION}.orig.tar.gz" \
     | tar -xz
