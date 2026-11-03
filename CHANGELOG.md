@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file. The format 
 
 > **Note**: Changes and additions listed here are contained in the `:edge` image tag. These changes may not be as stable as released changes.
 
+### Updated
+
+- **Rspamd**
+  - Rspamd is pinned to `4.1.5`: the `.deb` is downloaded from the Rspamd package pool and verified by checksum, instead of installing the newest release of the Rspamd apt repo. This keeps the image on the version shipped in v16.0.0 and v16.0.1 (and avoids the incompatible changes of Rspamd 4.2) when the image is rebuilt.
+- **Swaks** is installed from Debian (same upstream version `20240103.0`) instead of from a GitHub release.
+
 ### CI
 
 - Moved `setup_cli.bats` to the serial test suite to prevent `setup.sh` from racing with teardown of another DMS test container ([#4701](https://github.com/docker-mailserver/docker-mailserver/issues/4701))
