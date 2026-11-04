@@ -6,8 +6,6 @@
 # -o pipefail :: exit on error in pipes
 set -eE -u -o pipefail
 
-VERSION_CODENAME='trixie'
-
 # shellcheck source=../helpers/log.sh
 source /usr/local/bin/helpers/log.sh
 
@@ -29,8 +27,8 @@ function _pre_installation_steps() {
     apt-utils
     # Required to ensure correct `clamav` ownership (for associated COPY in Dockerfile):
     adduser
-    # Required to support adding third-party repos (/etc/apt/sources.list.d) as alternative package sources (eg: Rspamd):
-    apt-transport-https ca-certificates curl gnupg
+    # Required to download third-party software (see `_install_utils`):
+    ca-certificates curl
     # Avoid problems with SA / Amavis (https://github.com/docker-mailserver/docker-mailserver/pull/3403#pullrequestreview-1596689953):
     systemd-standalone-sysusers
   )
@@ -59,21 +57,7 @@ function _install_utils() {
       ;;
   esac
 
-  # NOTE: `*.tar.gz` releases tend to forget to reset UID/GID
-  #       ownership when archiving. When extracting with `tar`
-  #       as `root` the archived UID/GID is kept, unless using
-  #       `--no-same-owner`. Likewise when the binary is in a
-  #       nested location the full archived path must be
-  #       provided + `--strip-components` to extract the file
-  #       to the target directory. Doing this avoids the need
-  #       for (`mv` + `rm`) or (`--to-stdout` + `chmod +x`)
   _log 'debug' 'Installing utilities from Github'
-
-  _log 'trace' 'Installing jaq'
-  local JAQ_VERSION='v3.1.1'
-  curl -sSfL -o /usr/local/bin/jaq \
-    "https://github.com/01mf02/jaq/releases/download/${JAQ_VERSION}/jaq-${ARCH_A}-unknown-linux-gnu"
-  chmod +x /usr/local/bin/jaq
 
   _log 'trace' 'Installing step'
   local STEP_CLI_VERSION='0.30.6'
@@ -108,6 +92,7 @@ function _install_packages() {
     libdate-manip-perl libldap-common libmail-spf-perl libnet-dns-perl
     locales logwatch netcat-openbsd
     nftables # primarily for Fail2Ban
+    jaq # used to parse JSON (the update check)
     perl-doc # required for `swaks --help` to work
     rsyslog supervisor swaks
     uuid # used for file-locking
@@ -170,61 +155,14 @@ function _install_dovecot() {
 }
 
 function _install_rspamd() {
-  # NOTE: DMS only supports the Rspamd package by using the
-  #       third-party repo maintained by Rspamd (AMD64 + ARM64)
-  #
-  # REF: https://rspamd.com/apt-stable/dists/trixie/main/
-  #      https://rspamd.com/downloads.html#debian-and-ubuntu-linux
-
-  _log 'trace' 'Adding third-party package repository (Rspamd)'
-  curl -fsSL https://rspamd.com/apt-stable/gpg.key \
-    | gpg --dearmor > /usr/share/keyrings/upstream-rspamd.gpg
-  cat >/etc/apt/sources.list.d/upstream-rspamd.sources <<EOF
-Types: deb
-URIs: https://rspamd.com/apt-stable/
-Suites: ${VERSION_CODENAME}
-Components: main
-Signed-By: /usr/share/keyrings/upstream-rspamd.gpg
-EOF
-
   _log 'debug' 'Installing Rspamd'
-  apt-get "${QUIET}" update
   apt-get "${QUIET}" install rspamd valkey-server
 }
 
 function _install_fail2ban() {
-  local FAIL2BAN_VERSION=1.1.1
-  # upstream1 was withdrawn (wrong install paths); use upstream2:
-  # https://github.com/fail2ban/fail2ban/issues/4222
-  local FAIL2BAN_DEB_URL="https://github.com/fail2ban/fail2ban/releases/download/${FAIL2BAN_VERSION}/fail2ban_${FAIL2BAN_VERSION}-1.upstream2_all.deb"
-  local FAIL2BAN_DEB_ASC_URL="${FAIL2BAN_DEB_URL}.asc"
-  local FAIL2BAN_GPG_FINGERPRINT='8738 559E 26F6 71DF 9E2C  6D9E 683B F1BE BD0A 882C'
-  local FAIL2BAN_GPG_PUBLIC_KEY_ID='0x683BF1BEBD0A882C'
-  local FAIL2BAN_GPG_PUBLIC_KEY_SERVER='hkps://keyserver.ubuntu.com'
-
   _log 'debug' 'Installing Fail2ban'
   # Dependencies (https://github.com/docker-mailserver/docker-mailserver/pull/3403#discussion_r1306581431):
-  apt-get "${QUIET}" install --no-install-recommends python3-pyinotify python3-dnspython python3-systemd
-
-  gpg --keyserver "${FAIL2BAN_GPG_PUBLIC_KEY_SERVER}" --recv-keys "${FAIL2BAN_GPG_PUBLIC_KEY_ID}" 2>&1
-
-  curl -fsSLo fail2ban.deb "${FAIL2BAN_DEB_URL}"
-  curl -fsSLo fail2ban.deb.asc "${FAIL2BAN_DEB_ASC_URL}"
-
-  FINGERPRINT=$(LANG=C gpg --verify fail2ban.deb.asc fail2ban.deb |& sed -n 's#Primary key fingerprint: \(.*\)#\1#p')
-
-  if [[ -z ${FINGERPRINT} ]]; then
-    echo 'ERROR: Invalid GPG signature!' >&2
-    exit 1
-  fi
-
-  if [[ ${FINGERPRINT} != "${FAIL2BAN_GPG_FINGERPRINT}" ]]; then
-    echo "ERROR: Wrong GPG fingerprint!" >&2
-    exit 1
-  fi
-
-  dpkg -i fail2ban.deb 2>&1
-  rm fail2ban.deb fail2ban.deb.asc
+  apt-get "${QUIET}" install --no-install-recommends fail2ban python3-pyinotify python3-dnspython python3-systemd
 }
 
 function _post_installation_steps() {

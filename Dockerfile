@@ -6,7 +6,7 @@
 ARG DEBIAN_FRONTEND=noninteractive
 ARG LOG_LEVEL=trace
 
-FROM docker.io/debian:13-slim AS stage-base
+FROM docker.io/debian:forky-slim AS stage-base
 
 ARG DEBIAN_FRONTEND
 ARG LOG_LEVEL

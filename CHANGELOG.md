@@ -35,6 +35,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Updated
 
+- **Base image**
+  - The image is now based on Debian Forky (`debian:forky-slim`, currently Debian testing) instead of Debian Trixie.
+  - Rspamd (`4.1.5`), Fail2ban (`1.1.1`) and jaq (`3.1.1`) are installed from the Debian repository instead of from the Rspamd package repository and from GitHub releases. DMS no longer adds any third-party apt repository.
 - **Swaks** is installed from the Debian package (same upstream version, `20240103.0`) instead of from a GitHub release download.
 
 ### Fixed
