@@ -163,6 +163,10 @@ function _install_fail2ban() {
   _log 'debug' 'Installing Fail2ban'
   # Dependencies (https://github.com/docker-mailserver/docker-mailserver/pull/3403#discussion_r1306581431):
   apt-get "${QUIET}" install --no-install-recommends fail2ban python3-pyinotify python3-dnspython python3-systemd
+
+  # The Debian package enables an `sshd` jail (systemd backend) and sets default ban actions.
+  # DMS runs no sshd and has no journal, and configures its own jails and ban action in `jail.local`:
+  rm /etc/fail2ban/jail.d/defaults-debian.conf
 }
 
 function _post_installation_steps() {
