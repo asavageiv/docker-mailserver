@@ -92,7 +92,7 @@ function _vhost_ldap_support() {
 # Examples of different types actively used:
 # setup-stack.sh:_setup_spoof_protection uses texthash + hash + pcre, and conditionally unionmap
 # main.cf:
-# - alias_maps and alias_database both use hash:/etc/aliases
+# - alias_maps and alias_database both use ${default_database_type}:/etc/aliases (hash on Trixie, cdb on Forky)
 # - virtual_mailbox_maps and virtual_alias_maps use texthash
 # - `alias.sh` may append pcre:/etc/postfix/regexp to virtual_alias_maps in `main.cf`
 #

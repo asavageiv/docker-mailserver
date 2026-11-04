@@ -20,9 +20,11 @@ function _setup_spoof_protection() {
       # TODO: From section: "SPOOF_PROTECTION=1 handling for smtpd_sender_login_maps"
       # https://github.com/docker-mailserver/docker-mailserver/issues/2819#issue-1402114383
       if [[ -f /etc/postfix/regexp ]]; then
-        postconf 'smtpd_sender_login_maps = unionmap:{ texthash:/etc/postfix/virtual, hash:/etc/aliases, pcre:/etc/postfix/maps/sender_login_maps.pcre, pcre:/etc/postfix/regexp }'
+        # shellcheck disable=SC2016
+        postconf 'smtpd_sender_login_maps = unionmap:{ texthash:/etc/postfix/virtual, ${default_database_type}:/etc/aliases, pcre:/etc/postfix/maps/sender_login_maps.pcre, pcre:/etc/postfix/regexp }'
       else
-        postconf 'smtpd_sender_login_maps = texthash:/etc/postfix/virtual, hash:/etc/aliases, pcre:/etc/postfix/maps/sender_login_maps.pcre'
+        # shellcheck disable=SC2016
+        postconf 'smtpd_sender_login_maps = texthash:/etc/postfix/virtual, ${default_database_type}:/etc/aliases, pcre:/etc/postfix/maps/sender_login_maps.pcre'
       fi
     fi
   else

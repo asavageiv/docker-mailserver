@@ -14,8 +14,8 @@ smtputf8_enable = no
 
 # Basic configuration
 # myhostname =
-alias_maps = hash:/etc/aliases
-alias_database = hash:/etc/aliases
+alias_maps = ${default_database_type}:/etc/aliases
+alias_database = ${default_database_type}:/etc/aliases
 # Take the following concerns into consideration if adjusting `mydestination`:
 # https://github.com/docker-mailserver/docker-mailserver/pull/3264#pullrequestreview-1396816109
 # https://github.com/docker-mailserver/docker-mailserver/pull/3264#issuecomment-1518993555
