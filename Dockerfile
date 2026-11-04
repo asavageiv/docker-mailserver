@@ -162,7 +162,7 @@ COPY \
 RUN <<EOF
   : >/etc/aliases
   sedfile -i 's/START_DAEMON=no/START_DAEMON=yes/g' /etc/default/fetchmail
-  mkdir /var/run/fetchmail && chown fetchmail /var/run/fetchmail
+  mkdir -p /var/run/fetchmail && chown fetchmail /var/run/fetchmail
 EOF
 
 # -----------------------------------------------
