@@ -9,8 +9,8 @@ All notable changes to this project will be documented in this file. The format 
 ### Updated
 
 - **Rspamd**
-  - Rspamd is pinned to `4.1.5`: the `.deb` is downloaded from the Rspamd package pool and verified by checksum, instead of installing the newest release of the Rspamd apt repo. This keeps the image on the version shipped in v16.0.0 and v16.0.1 (and avoids the incompatible changes of Rspamd 4.2) when the image is rebuilt.
-- **Swaks** is installed from Debian (same upstream version `20240103.0`) instead of from a GitHub release.
+  - Rspamd is pinned to `4.1.5`: the `.deb` is downloaded from the Rspamd package pool and verified by checksum, instead of installing the newest release of the Rspamd apt repo. This keeps the image on the version shipped in v16.0.0 and v16.0.1 (and avoids the incompatible changes of Rspamd 4.2) when the image is rebuilt. ([#4836](https://github.com/docker-mailserver/docker-mailserver/pull/4836))
+- **Swaks** is installed from Debian (same upstream version `20240103.0`) instead of from a GitHub release ([#4837](https://github.com/docker-mailserver/docker-mailserver/pull/4837)).
 
 ### CI
 
